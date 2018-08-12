@@ -1,6 +1,6 @@
 {
     "name": "jasny/autowire",
-    "description": "",
+    "description": "Autowiring for PSR-11 containers",
     "keywords": [],
     "license": "MIT",
     "authors": [
@@ -15,10 +15,10 @@
         "source": "https://github.com/jasny/autowire"
     },
     "require": {
-        "php": ">=7.0.0"
+        "php": ">=7.1.0"
     },
     "require-dev": {
-        "jasny/php-code-quality": "^2.0"
+        "jasny/php-code-quality": "^2.3"
     },
     "autoload": {
         "psr-4": {
