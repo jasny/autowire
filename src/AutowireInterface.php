@@ -1,6 +1,6 @@
 <?php
 
-namespace Jasny\Container;
+namespace Jasny\Autowire;
 
 /**
  * Interface for autowire service
@@ -13,7 +13,7 @@ interface AutowireInterface
      * @param string $class
      * @return object
      */
-    public function instantiate($class);
+    public function instantiate(string $class);
 
     /**
      * Must be an alias of the `instantiate` method
