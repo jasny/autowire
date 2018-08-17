@@ -2,6 +2,7 @@
 
 namespace Jasny\Autowire\Tests;
 
+use Jasny\Autowire\AutowireException;
 use Jasny\Autowire\ReflectionAutowire;
 use Jasny\Autowire\Tests\Support\ConnectionInterface;
 use Jasny\Autowire\Tests\Support\ValidationInterface;
@@ -27,14 +28,13 @@ class ReflectionAutowireTest extends TestCase
     /**
      * @return MockObject|\ReflectionClass
      */
-    protected function createReflectionClassMock(string $class, string $docComment, array $params)
+    protected function createReflectionClassMock(string $class, $docComment, array $params)
     {
         $reflParams = [];
 
         foreach ($params as $name => $type) {
-            $reflType = isset($type)
-                ? $this->createConfiguredMock(\ReflectionNamedType::class, ['getName' => $type])
-                : null;
+            $reflType = isset($type) ? $this->createConfiguredMock(\ReflectionNamedType::class,
+                ['getName' => $type, 'isBuiltin' => $type === 'string']) : null;
 
             $reflParams[] = $this->createConfiguredMock(\ReflectionParameter::class,
                 ['getName' => $name, 'getType' => $reflType]);
@@ -53,7 +53,19 @@ class ReflectionAutowireTest extends TestCase
         return $reflClass;
     }
 
-    public function testInstantiate()
+    public function docCommentProvider()
+    {
+        return [
+            [false],
+            [''],
+            ["/**\n * Lorem ipsum\n */"]
+        ];
+    }
+
+    /**
+     * @dataProvider docCommentProvider
+     */
+    public function testInstantiate($docComment)
     {
         $color = (object)[];
         $hue = (object)[];
@@ -64,7 +76,8 @@ class ReflectionAutowireTest extends TestCase
             ->withConsecutive(['ColorInterface'], ['HueInterface'])
             ->willReturnOnConsecutiveCalls($color, $hue);
 
-        $reflClass = $this->createReflectionClassMock('Foo', '', ['color' => 'ColorInterface', 'hue' => 'HueInterface']);
+        $reflClass = $this->createReflectionClassMock('Foo', $docComment,
+            ['color' => 'ColorInterface', 'hue' => 'HueInterface']);
         $reflClass->expects($this->once())->method('newInstanceArgs')
             ->with($this->identicalTo([$color, $hue]))
             ->willReturn($foo);
@@ -100,7 +113,8 @@ class ReflectionAutowireTest extends TestCase
  */
 DOC_COMMENT;
 
-        $reflClass = $this->createReflectionClassMock('Foo', $docComment, ['color' => 'ColorInterface', 'hue' => null]);
+        $reflClass = $this->createReflectionClassMock('Foo', $docComment,
+            ['color' => 'ColorInterface', 'hue' => null]);
         $reflClass->expects($this->once())->method('newInstanceArgs')
             ->with($this->identicalTo([$color, $hue]))
             ->willReturn($foo);
@@ -114,6 +128,66 @@ DOC_COMMENT;
         $this->assertSame($foo, $result);
     }
 
+    public function testInstantiateNoConstructor()
+    {
+        $foo = (object)[];
+
+        $container = $this->createMock(ContainerInterface::class);
+        $container->expects($this->never())->method('get');
+
+        $reflClass = $this->createMock(\ReflectionClass::class);
+        $reflClass->method('hasMethod')->with('__construct')->willReturn(false);
+        $reflClass->method('getName')->willReturn('Foo');
+
+        $reflClass->expects($this->once())->method('newInstanceArgs')->with([])->willReturn($foo);
+
+        $reflection = $this->createMock(ReflectionFactoryInterface::class);
+        $reflection->expects($this->once())->method('reflectClass')->with('Foo')->willReturn($reflClass);
+
+        $autowire = new ReflectionAutowire($container, $reflection);
+        $result = $autowire->instantiate('Foo');
+
+        $this->assertSame($foo, $result);
+    }
+
+    /**
+     * @expectedException \Jasny\Autowire\AutowireException
+     * @expectedExceptionMessage Unable to autowire Foo: Unknown type for parameter 'hue'.
+     */
+    public function testInstantiateUnknownType()
+    {
+        $container = $this->createMock(ContainerInterface::class);
+        $container->expects($this->never())->method('get');
+
+        $reflClass = $this->createReflectionClassMock('Foo', false, ['color' => 'ColorInterface', 'hue' => null]);
+        $reflClass->expects($this->never())->method('newInstanceArgs');
+
+        $reflection = $this->createMock(ReflectionFactoryInterface::class);
+        $reflection->expects($this->once())->method('reflectClass')->with('Foo')->willReturn($reflClass);
+
+        $autowire = new ReflectionAutowire($container, $reflection);
+        $autowire->instantiate('Foo');
+    }
+
+    /**
+     * @expectedException \Jasny\Autowire\AutowireException
+     * @expectedExceptionMessage Build-in type 'string' for parameter 'hue' can't be used as container id. Please use annotations.
+     */
+    public function testInstantiateBuiltinType()
+    {
+        $container = $this->createMock(ContainerInterface::class);
+        $container->expects($this->never())->method('get');
+
+        $reflClass = $this->createReflectionClassMock('Foo', false, ['color' => 'ColorInterface', 'hue' => 'string']);
+        $reflClass->expects($this->never())->method('newInstanceArgs');
+
+        $reflection = $this->createMock(ReflectionFactoryInterface::class);
+        $reflection->expects($this->once())->method('reflectClass')->with('Foo')->willReturn($reflClass);
+
+        $autowire = new ReflectionAutowire($container, $reflection);
+        $autowire->instantiate('Foo');
+    }
+
     public function testInvoke()
     {
         $object = new \stdClass();
@@ -121,6 +195,6 @@ DOC_COMMENT;
         $autowire = $this->createPartialMock(ReflectionAutowire::class, ['instantiate']);
         $autowire->expects($this->once())->method('instantiate')->with('stdClass')->willReturn($object);
 
-        $autowire->instantiate('stdClass');
+        $autowire->__invoke('stdClass');
     }
 }

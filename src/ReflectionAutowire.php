@@ -52,8 +52,8 @@ class ReflectionAutowire implements AutowireInterface
 
         if ($reflType->isBuiltin()) {
             throw new AutowireException("Unable to autowire {$class}: "
-                . "Build-in type '" . $reflType->getName() . "' for parameter '{$param}' can't be used as container"
-                . " id. Please use annotations.");
+                . "Build-in type '" . $reflType->getName() . "' for parameter '{$param}' can't be used as container "
+                . "id. Please use annotations.");
         }
     }
 
