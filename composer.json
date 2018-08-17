@@ -31,5 +31,22 @@
         "psr-4": {
             "Jasny\\Autowire\\Tests\\": "tests/"
         }
-    }
+    },
+    "scripts": {
+        "test": [
+            "phpunit",
+            "phpcs -p src",
+            "phpstan analyse"
+        ],
+        "post-create-project-cmd": [
+            "bash init.sh && rm init.sh"
+        ]
+    },
+    "config": {
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "optimize-autoloader": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }

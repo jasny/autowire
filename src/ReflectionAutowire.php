@@ -42,9 +42,10 @@ class ReflectionAutowire implements AutowireInterface
      * @param string                    $class
      * @param string                    $param
      * @param \ReflectionNamedType|null $reflType
+     * @return void
      * @throws AutowireException
      */
-    protected function assertType(string $class, string $param, ?\ReflectionNamedType $reflType)
+    protected function assertType(string $class, string $param, ?\ReflectionNamedType $reflType): void
     {
         if ($reflType === null) {
             throw new AutowireException("Unable to autowire {$class}: Unknown type for parameter '{$param}'.");
