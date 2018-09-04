@@ -56,10 +56,10 @@ class Bar
     /**
      * Class constructor
      *
-     * @param ConnectionInterface $connection  "db_connections.default"
      * @param string              $color       "config:bar_color"
+     * @param ConnectionInterface $connection  "db_connections.default"
      */
-    public function __construct(ConnectionInterface $connection, string $color)
+    public function __construct(string $color, ConnectionInterface $connection)
     {
         // ...
     }
@@ -72,3 +72,35 @@ fully-qualified-class-name (FQCN), which requires looking at the namespace and `
 
 This library deliberately doesn't support autowiring for properties or methods. Please explicitly call those methods in
 the container function or use an abstract factory.
+
+### Non-wired parameters
+
+Additional arguments in `instantiate()` are passed directly to the constructor. No autowiring is applied to these
+parameters.  
+
+```php
+class Bar
+{
+    /**
+     * Class constructor
+     *
+     * @param string              $color       A color
+     * @param ConnectionInterface $connection  "db_connections.default"
+     */
+    public function __construct(string $color, ConnectionInterface $connection)
+    {
+        // ...
+    }
+}
+```
+
+```php
+use Jasny\Autowire\ReflectionAutowire();
+
+$autowire = new ReflectionAutowire($container);
+
+$foo = $autowire->instantiate(Foo::class, 'blue');
+```
+
+_The constructor MUST begin with these parameters. It's not possible to cherry-pick the parameters than need to be
+autowired._

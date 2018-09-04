@@ -128,6 +128,38 @@ DOC_COMMENT;
         $this->assertSame($foo, $result);
     }
 
+    public function testInstantiateParams()
+    {
+        $hue = 22;
+        $foo = (object)[];
+
+        $container = $this->createMock(ContainerInterface::class);
+        $container->expects($this->once())->method('get')->with('config.hue')->willReturn($hue);
+
+        $docComment = <<<DOC_COMMENT
+/**
+ * Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed lacinia tellus ut dui blandit, at pretium sapien
+ * pharetra. In ut nibh est. Donec auctor dolor a dolor aliquam accumsan.
+ * @see https://jasny.net/
+ *
+ * @param string     \$color
+ * @param int|string \$hue    "config.hue"  The hue setting
+ */
+DOC_COMMENT;
+
+        $reflClass = $this->createReflectionClassMock('Foo', $docComment, ['color' => null, 'hue' => null]);
+        $reflClass->expects($this->once())->method('newInstanceArgs')
+            ->with($this->identicalTo(['blue', $hue]))
+            ->willReturn($foo);
+
+        $reflection = $this->createMock(ReflectionFactoryInterface::class);
+        $reflection->expects($this->once())->method('reflectClass')->with('Foo')->willReturn($reflClass);
+
+        $autowire = new ReflectionAutowire($container, $reflection);
+        $result = $autowire->instantiate('Foo', 'blue');
+
+        $this->assertSame($foo, $result);
+    }
     public function testInstantiateNoConstructor()
     {
         $foo = (object)[];

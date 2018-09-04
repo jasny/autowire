@@ -42,6 +42,9 @@
             "bash init.sh && rm init.sh"
         ]
     },
+    "scripts-descriptions": {
+        "test": "Run all tests and quality checks"
+    },
     "config": {
         "preferred-install": "dist",
         "sort-packages": true,

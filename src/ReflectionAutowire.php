@@ -75,8 +75,8 @@ class ReflectionAutowire implements AutowireInterface
 
         $annotations = [];
 
-        foreach ($matches as $i => $match) {
-            $annotations[$i] = isset($match[3]) && $match[3] !== '' ? $match[3] : null;
+        foreach ($matches as $index => $match) {
+            $annotations[$index] = isset($match[3]) && $match[3] !== '' ? $match[3] : null;
         }
 
         return $annotations;
@@ -100,9 +100,10 @@ class ReflectionAutowire implements AutowireInterface
      * Get all dependencies for a class constructor.
      *
      * @param \ReflectionClass $class
+     * @param int              $skip   Number of parameters to skip
      * @return array
      */
-    protected function determineDependencies(\ReflectionClass $class)
+    protected function determineDependencies(\ReflectionClass $class, int $skip)
     {
         if (!$class->hasMethod('__construct')) {
             return [];
@@ -114,8 +115,11 @@ class ReflectionAutowire implements AutowireInterface
 
         $identifiers = [];
 
-        foreach ($constructor->getParameters() as $i => $param) {
-            $identifiers[] = $annotations[$i] ?? $this->getParamType($class, $param);
+        $params = $constructor->getParameters();
+        $consideredParams = $skip === 0 ? $params : array_slice($params, $skip, null, true);
+
+        foreach ($consideredParams as $index => $param) {
+            $identifiers[$index] = $annotations[$index] ?? $this->getParamType($class, $param);
         }
 
         return $identifiers;
@@ -131,8 +135,8 @@ class ReflectionAutowire implements AutowireInterface
     {
         $dependencies = [];
 
-        foreach ($ids as $identifier) {
-            $dependencies[] = $this->container->get($identifier);
+        foreach ($ids as $index => $identifier) {
+            $dependencies[$index] = $this->container->get($identifier);
         };
 
         return $dependencies;
@@ -142,16 +146,17 @@ class ReflectionAutowire implements AutowireInterface
      * Instantiate a new object, automatically injecting dependencies
      *
      * @param string $class
+     * @param mixed  ...$params  Additional arguments are passed to the constructor directly.
      * @return object
      * @throws AutowireException
      * @throws \ReflectionException
      */
-    public function instantiate(string $class)
+    public function instantiate(string $class, ...$params)
     {
         $refl = $this->reflection->reflectClass($class);
 
-        $dependencyIds = $this->determineDependencies($refl);
-        $dependencies = $this->getDependencies($dependencyIds);
+        $dependencyIds = $this->determineDependencies($refl, count($params));
+        $dependencies = $params + $this->getDependencies($dependencyIds);
 
         return $refl->newInstanceArgs($dependencies);
     }
@@ -160,11 +165,13 @@ class ReflectionAutowire implements AutowireInterface
      * Alias of `instantiate` method
      *
      * @param string $class
+     * @param mixed  ...$params  Additional arguments are passed to the constructor directly.
      * @return object
+     * @throws AutowireException
      * @throws \ReflectionException
      */
-    final public function __invoke($class)
+    final public function __invoke($class, ...$params)
     {
-        return $this->instantiate($class);
+        return $this->instantiate($class, ...$params);
     }
 }
