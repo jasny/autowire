@@ -5,7 +5,6 @@ Jasny Autowire
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jasny/autowire/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jasny/autowire/?branch=master)
 [![Code Coverage](https://scrutinizer-ci.com/g/jasny/autowire/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/jasny/autowire/?branch=master)
 [![SensioLabsInsight](https://insight.sensiolabs.com/projects/6c5ec45d-5570-4e50-87ce-39cabc237f2b/mini.png)](https://insight.sensiolabs.com/projects/6c5ec45d-5570-4e50-87ce-39cabc237f2b)
-[![BCH compliance](https://bettercodehub.com/edge/badge/jasny/autowire?branch=master)](https://bettercodehub.com/)
 [![Packagist Stable Version](https://img.shields.io/packagist/v/jasny/autowire.svg)](https://packagist.org/packages/jasny/autowire)
 [![Packagist License](https://img.shields.io/packagist/l/jasny/autowire.svg)](https://packagist.org/packages/jasny/autowire)
 
