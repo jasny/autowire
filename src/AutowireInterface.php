@@ -1,25 +1,11 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Jasny\Autowire;
 
 /**
- * Interface for autowire service
+ * Alias for Autowire interface for BC.
+ * @deprecated
  */
-interface AutowireInterface
+interface AutowireInterface extends Autowire
 {
-    /**
-     * Instantiate a new object
-     *
-     * @param string $class
-     * @return object
-     */
-    public function instantiate(string $class);
-
-    /**
-     * Must be an alias of the `instantiate` method
-     *
-     * @param string $class
-     * @return object
-     */
-    public function __invoke($class);
 }

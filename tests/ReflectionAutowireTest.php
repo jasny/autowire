@@ -1,8 +1,7 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Jasny\Autowire\Tests;
 
-use Jasny\Autowire\AutowireException;
 use Jasny\Autowire\ReflectionAutowire;
 use Jasny\Autowire\Tests\Support\ConnectionInterface;
 use Jasny\Autowire\Tests\Support\ValidationInterface;
@@ -56,8 +55,8 @@ class ReflectionAutowireTest extends TestCase
     public function docCommentProvider()
     {
         return [
-            [false],
-            [''],
+            //[false],
+            //[''],
             ["/**\n * Lorem ipsum\n */"]
         ];
     }

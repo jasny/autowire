@@ -1,9 +1,7 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Jasny\Autowire;
 
-use Jasny\Autowire\AutowireInterface;
-use Jasny\Autowire\AutowireException;
 use Jasny\ReflectionFactory\ReflectionFactory;
 use Jasny\ReflectionFactory\ReflectionFactoryInterface;
 use Psr\Container\ContainerInterface as Psr11Container;
@@ -11,7 +9,7 @@ use Psr\Container\ContainerInterface as Psr11Container;
 /**
  * Autowire using reflection and annotations
  */
-class ReflectionAutowire implements AutowireInterface
+class ReflectionAutowire implements Autowire
 {
     /**
      * @var Psr11Container
@@ -39,15 +37,15 @@ class ReflectionAutowire implements AutowireInterface
     /**
      * Assert that type can be used as container id.
      *
-     * @param string                    $class
-     * @param string                    $param
-     * @param \ReflectionNamedType|null $reflType
+     * @param string               $class
+     * @param string               $param
+     * @param \ReflectionType|null $reflType
      * @return void
      * @throws AutowireException
      */
-    protected function assertType(string $class, string $param, ?\ReflectionNamedType $reflType): void
+    protected function assertType(string $class, string $param, ?\ReflectionType $reflType): void
     {
-        if ($reflType === null) {
+        if ($reflType === null || !$reflType instanceof \ReflectionNamedType) {
             throw new AutowireException("Unable to autowire {$class}: Unknown type for parameter '{$param}'.");
         }
 
@@ -65,11 +63,11 @@ class ReflectionAutowire implements AutowireInterface
      * @param string $docComment
      * @return array
      */
-    protected function extractParamAnnotations(string $docComment)
+    protected function extractParamAnnotations(string $docComment): array
     {
         $pattern = '/@param(?:\s+([^$"]\S+))?(?:\s+\$(\w+))?(?:\s+"([^"]++)")?/';
 
-        if (!preg_match_all($pattern, $docComment, $matches, PREG_SET_ORDER)) {
+        if (!(bool)preg_match_all($pattern, $docComment, $matches, PREG_SET_ORDER)) {
             return [];
         }
 
@@ -103,7 +101,7 @@ class ReflectionAutowire implements AutowireInterface
      * @param int              $skip   Number of parameters to skip
      * @return array
      */
-    protected function determineDependencies(\ReflectionClass $class, int $skip)
+    protected function determineDependencies(\ReflectionClass $class, int $skip): array
     {
         if (!$class->hasMethod('__construct')) {
             return [];
@@ -146,17 +144,17 @@ class ReflectionAutowire implements AutowireInterface
      * Instantiate a new object, automatically injecting dependencies
      *
      * @param string $class
-     * @param mixed  ...$params  Additional arguments are passed to the constructor directly.
+     * @param mixed  ...$args  Additional arguments are passed to the constructor directly.
      * @return object
      * @throws AutowireException
      * @throws \ReflectionException
      */
-    public function instantiate(string $class, ...$params)
+    public function instantiate(string $class, ...$args)
     {
         $refl = $this->reflection->reflectClass($class);
 
-        $dependencyIds = $this->determineDependencies($refl, count($params));
-        $dependencies = $params + $this->getDependencies($dependencyIds);
+        $dependencyIds = $this->determineDependencies($refl, count($args));
+        $dependencies = $args + $this->getDependencies($dependencyIds);
 
         return $refl->newInstanceArgs($dependencies);
     }
@@ -165,13 +163,13 @@ class ReflectionAutowire implements AutowireInterface
      * Alias of `instantiate` method
      *
      * @param string $class
-     * @param mixed  ...$params  Additional arguments are passed to the constructor directly.
+     * @param mixed  ...$args  Additional arguments are passed to the constructor directly.
      * @return object
      * @throws AutowireException
      * @throws \ReflectionException
      */
-    final public function __invoke($class, ...$params)
+    final public function __invoke($class, ...$args)
     {
-        return $this->instantiate($class, ...$params);
+        return $this->instantiate($class, ...$args);
     }
 }
