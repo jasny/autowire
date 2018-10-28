@@ -3,9 +3,9 @@
 namespace Jasny\Autowire;
 
 /**
- * Interface for autowire service
+ * Interface for autowiring service
  */
-interface Autowire
+interface Autowire extends AutowireInterface
 {
     /**
      * Instantiate a new object

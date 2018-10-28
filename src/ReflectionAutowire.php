@@ -7,7 +7,7 @@ use Jasny\ReflectionFactory\ReflectionFactoryInterface;
 use Psr\Container\ContainerInterface as Psr11Container;
 
 /**
- * Autowire using reflection and annotations
+ * Autowiring using reflection and annotations.
  */
 class ReflectionAutowire implements Autowire
 {

@@ -3,9 +3,9 @@
 namespace Jasny\Autowire;
 
 /**
- * Alias for Autowire interface for BC.
+ * Interface for autowiring service
  * @deprecated
  */
-interface AutowireInterface extends Autowire
+interface AutowireInterface
 {
 }
