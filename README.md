@@ -45,6 +45,21 @@ $foo = $autowire(Foo::class);
 
 _The library works with any PSR-11 compatible container, not just [jasny\container](https://github.com/jasny/container)._
 
+### Optional parameters
+
+If the argument may be `null`, it will be set to `null` if no container entry for the parameter exists.
+
+```php
+class Foo
+{
+    public function __construct(?ColorInterface $color)
+    {
+        // ...
+    }
+}
+```
+
+### Doc comments
 
 It also parses the [doc comment](http://php.net/reflectionclass.getdoccomment) and can get entry name
 from `@param`. Entry names must be the first part of the description and surrounded by double quotes.

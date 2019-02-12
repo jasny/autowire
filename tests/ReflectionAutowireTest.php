@@ -32,11 +32,18 @@ class ReflectionAutowireTest extends TestCase
         $reflParams = [];
 
         foreach ($params as $name => $type) {
-            $reflType = isset($type) ? $this->createConfiguredMock(\ReflectionNamedType::class,
-                ['getName' => $type, 'isBuiltin' => $type === 'string']) : null;
+            $optional = is_string($type) && $type[0] === '?';
+            $type = is_string($type) ? ltrim($type, '?') : $type;
 
-            $reflParams[] = $this->createConfiguredMock(\ReflectionParameter::class,
-                ['getName' => $name, 'getType' => $reflType]);
+            $reflType = isset($type) ? $this->createConfiguredMock(
+                \ReflectionNamedType::class,
+                ['getName' => $type, 'isBuiltin' => $type === 'string']
+            ) : null;
+
+            $reflParams[] = $this->createConfiguredMock(
+                \ReflectionParameter::class,
+                ['getName' => $name, 'getType' => $reflType, 'allowsNull' => $optional]
+            );
         }
 
         $reflConstruct = $this->createMock(\ReflectionMethod::class);
@@ -55,8 +62,8 @@ class ReflectionAutowireTest extends TestCase
     public function docCommentProvider()
     {
         return [
-            //[false],
-            //[''],
+            [false],
+            [''],
             ["/**\n * Lorem ipsum\n */"]
         ];
     }
@@ -71,6 +78,7 @@ class ReflectionAutowireTest extends TestCase
         $foo = (object)[];
 
         $container = $this->createMock(ContainerInterface::class);
+        $container->expects($this->never())->method('has');
         $container->expects($this->exactly(2))->method('get')
             ->withConsecutive(['ColorInterface'], ['HueInterface'])
             ->willReturnOnConsecutiveCalls($color, $hue);
@@ -79,6 +87,37 @@ class ReflectionAutowireTest extends TestCase
             ['color' => 'ColorInterface', 'hue' => 'HueInterface']);
         $reflClass->expects($this->once())->method('newInstanceArgs')
             ->with($this->identicalTo([$color, $hue]))
+            ->willReturn($foo);
+
+        $reflection = $this->createMock(ReflectionFactoryInterface::class);
+        $reflection->expects($this->once())->method('reflectClass')->with('Foo')->willReturn($reflClass);
+
+        $autowire = new ReflectionAutowire($container, $reflection);
+        $result = $autowire->instantiate('Foo');
+
+        $this->assertSame($foo, $result);
+    }
+
+    public function testInstantiateOptional()
+    {
+        $color = (object)[];
+        $foo = (object)[];
+
+        $container = $this->createMock(ContainerInterface::class);
+        $container->expects($this->exactly(2))->method('has')
+            ->withConsecutive(['ColorInterface'], ['HueInterface'])
+            ->willReturnOnConsecutiveCalls(true, false);
+        $container->expects($this->once())->method('get')
+            ->with('ColorInterface')
+            ->willReturn($color);
+
+        $reflClass = $this->createReflectionClassMock(
+            'Foo',
+            '',
+            ['color' => '?ColorInterface', 'hue' => '?HueInterface']
+        );
+        $reflClass->expects($this->once())->method('newInstanceArgs')
+            ->with($this->identicalTo([$color, null]))
             ->willReturn($foo);
 
         $reflection = $this->createMock(ReflectionFactoryInterface::class);
@@ -159,6 +198,7 @@ DOC_COMMENT;
 
         $this->assertSame($foo, $result);
     }
+
     public function testInstantiateNoConstructor()
     {
         $foo = (object)[];

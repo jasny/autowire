@@ -99,7 +99,7 @@ class ReflectionAutowire implements Autowire
      *
      * @param \ReflectionClass $class
      * @param int              $skip   Number of parameters to skip
-     * @return array
+     * @return object[]
      */
     protected function determineDependencies(\ReflectionClass $class, int $skip): array
     {
@@ -117,7 +117,10 @@ class ReflectionAutowire implements Autowire
         $consideredParams = $skip === 0 ? $params : array_slice($params, $skip, null, true);
 
         foreach ($consideredParams as $index => $param) {
-            $identifiers[$index] = $annotations[$index] ?? $this->getParamType($class, $param);
+            $identifiers[$index] = (object)[
+                'key' => $annotations[$index] ?? $this->getParamType($class, $param),
+                'optional' => $param->allowsNull(),
+            ];
         }
 
         return $identifiers;
@@ -126,15 +129,17 @@ class ReflectionAutowire implements Autowire
     /**
      * Get dependencies from the container
      *
-     * @param array $ids
+     * @param object[] $identifiers
      * @return array
      */
-    protected function getDependencies(array $ids): array
+    protected function getDependencies(array $identifiers): array
     {
         $dependencies = [];
 
-        foreach ($ids as $index => $identifier) {
-            $dependencies[$index] = $this->container->get($identifier);
+        foreach ($identifiers as $index => $identifier) {
+            $dependencies[$index] = !$identifier->optional || $this->container->has($identifier->key)
+                ? $this->container->get($identifier->key)
+                : null;
         };
 
         return $dependencies;
