@@ -9,7 +9,7 @@ use Psr\Container\ContainerInterface as Psr11Container;
 /**
  * Autowiring using reflection and annotations.
  */
-class ReflectionAutowire implements Autowire
+class ReflectionAutowire implements AutowireInterface
 {
     /**
      * @var Psr11Container
