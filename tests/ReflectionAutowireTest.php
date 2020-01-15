@@ -1,12 +1,11 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Jasny\Autowire\Tests;
 
+use Jasny\Autowire\AutowireException;
 use Jasny\Autowire\ReflectionAutowire;
-use Jasny\Autowire\Tests\Support\ConnectionInterface;
-use Jasny\Autowire\Tests\Support\ValidationInterface;
-use Jasny\Autowire\Tests\Support\Foo;
-use Jasny\Autowire\Tests\Support\Bar;
 use Jasny\ReflectionFactory\ReflectionFactory;
 use Jasny\ReflectionFactory\ReflectionFactoryInterface;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -20,12 +19,11 @@ class ReflectionAutowireTest extends TestCase
         $container = $this->createMock(ContainerInterface::class);
         $autowire = new ReflectionAutowire($container);
 
-        $this->assertAttributeSame($container, 'container', $autowire);
-        $this->assertAttributeInstanceOf(ReflectionFactory::class, 'reflection', $autowire);
+        $this->assertSame($container, $autowire->getContainer());
     }
 
     /**
-     * @return MockObject|\ReflectionClass
+     * @return MockObject&\ReflectionClass
      */
     protected function createReflectionClassMock(string $class, $docComment, array $params)
     {
@@ -221,10 +219,24 @@ DOC_COMMENT;
         $this->assertSame($foo, $result);
     }
 
-    /**
-     * @expectedException \Jasny\Autowire\AutowireException
-     * @expectedExceptionMessage Unable to autowire Foo: Unknown type for parameter 'hue'.
-     */
+    public function testInstantiateUnknownClass()
+    {
+        $container = $this->createMock(ContainerInterface::class);
+        $container->expects($this->never())->method('get');
+
+        $reflection = $this->createMock(ReflectionFactoryInterface::class);
+        $reflection->expects($this->once())->method('reflectClass')
+            ->with('Foo')
+            ->willThrowException(new \ReflectionException("Class doesn't exist"));
+
+        $autowire = new ReflectionAutowire($container, $reflection);
+
+        $this->expectException(AutowireException::class);
+        $this->expectExceptionMessage("Unable to autowire Foo");
+
+        $autowire->instantiate('Foo');
+    }
+
     public function testInstantiateUnknownType()
     {
         $container = $this->createMock(ContainerInterface::class);
@@ -237,13 +249,13 @@ DOC_COMMENT;
         $reflection->expects($this->once())->method('reflectClass')->with('Foo')->willReturn($reflClass);
 
         $autowire = new ReflectionAutowire($container, $reflection);
+
+        $this->expectException(AutowireException::class);
+        $this->expectExceptionMessage("Unable to autowire Foo: Unknown type for parameter 'hue'.");
+
         $autowire->instantiate('Foo');
     }
 
-    /**
-     * @expectedException \Jasny\Autowire\AutowireException
-     * @expectedExceptionMessage Build-in type 'string' for parameter 'hue' can't be used as container id. Please use annotations.
-     */
     public function testInstantiateBuiltinType()
     {
         $container = $this->createMock(ContainerInterface::class);
@@ -256,6 +268,11 @@ DOC_COMMENT;
         $reflection->expects($this->once())->method('reflectClass')->with('Foo')->willReturn($reflClass);
 
         $autowire = new ReflectionAutowire($container, $reflection);
+
+        $this->expectException(AutowireException::class);
+        $this->expectExceptionMessage("Build-in type 'string' for parameter 'hue' can't be used as container id. "
+            . "Please use annotations.");
+
         $autowire->instantiate('Foo');
     }
 

@@ -1,4 +1,4 @@
-Jasny Autowire
+Autowire for PSR-11 containers
 ===
 
 [![Build Status](https://travis-ci.org/jasny/autowire.svg?branch=master)](https://travis-ci.org/jasny/autowire)
@@ -8,7 +8,8 @@ Jasny Autowire
 [![Packagist Stable Version](https://img.shields.io/packagist/v/jasny/autowire.svg)](https://packagist.org/packages/jasny/autowire)
 [![Packagist License](https://img.shields.io/packagist/l/jasny/autowire.svg)](https://packagist.org/packages/jasny/autowire)
 
-Instantiate an object (instead of using `new`), automatically determining the dependencies and getting them from a PSR-11 container.
+Instantiate an object (instead of using `new`), automatically determining the dependencies and getting them from a
+PSR-11 container.
 
 Installation
 ---
@@ -42,8 +43,6 @@ $foo = $autowire->instantiate(Foo::class);
 // OR
 $foo = $autowire(Foo::class);
 ```
-
-_The library works with any PSR-11 compatible container, not just [jasny\container](https://github.com/jasny/container)._
 
 ### Optional parameters
 
