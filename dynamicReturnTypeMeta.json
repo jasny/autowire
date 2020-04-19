@@ -1,9 +1,0 @@
-{
-    "methodCalls": [
-        {
-            "class": "\\Jasny\\Autowire\\AutowireInterface",
-            "method": "instantiate",
-            "position": 0
-        }
-    ]
-}
